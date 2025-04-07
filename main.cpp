@@ -4,16 +4,24 @@
 #include <QKeyEvent> // для обработки событий (клава, мышь)
 #include <QTimer> // для таймера
 #include <iostream>
+#include <QMessageBox>
 #include "src/snake.h"
 
 class GameWindow : public QWidget {
     private:
         Snake snake_;
         QTimer* timer_;
+        QVector<QRect> walls_;
     public:
         GameWindow(QWidget *parent = nullptr) {
             setWindowTitle("Snake");
             setFixedSize(400, 400);
+
+            // размечаем стены
+            walls_.append(QRect(0, 0, width(), 10));                 // верхняя
+            walls_.append(QRect(0, height() - 10, width(), 10));     // нижняя
+            walls_.append(QRect(0, 0, 10, height()));                // левая
+            walls_.append(QRect(width() - 10, 0, 10, height()));     // правая
 
             timer_ = new QTimer(this); // таймер для обновления игры
             // подключаем сигнал "timeout" к методу updateGame
@@ -37,10 +45,27 @@ class GameWindow : public QWidget {
         // - окно впервые отображается
         // ! все рисуется с нуля
 
+        // метод перезапуска игры
+        void restartGame() {
+            snake_.reset();  // сброс состояния змейки
+
+            // перезапуск таймера
+            timer_->start(100);
+
+            // перерисовываем окно
+            update();
+        }
+
         // переопределяем стандартный метод Qt
         void paintEvent(QPaintEvent *event) override {
             QPainter painter(this);  // Объект для рисования
             // NOTE: this — это указатель на текущий виджет
+
+            // рисуем стены
+            painter.setBrush(Qt::darkGray);
+            for (const QRect& wall : walls_) {
+                painter.drawRect(wall);
+            }
 
             painter.setBrush(Qt::green);  // Устанавливаем цвет для тела змейки
 
@@ -73,6 +98,45 @@ class GameWindow : public QWidget {
 
         void updateGame() {
             snake_.move();
+
+            // проверка на столкновение змейки со стенами
+            for (const QRect& wall : walls_) {
+                // "contains" проверяет, находится ли точка (голова змейки) внутри прямоугольника
+                if (wall.contains(snake_.getBody().first())) {
+                    timer_->stop(); // останавливаем игровой таймер и змейка больше не двигается
+
+                    QMessageBox::StandardButton reply;
+                    reply = QMessageBox::question(this, "Game Over", "You hit a wall! Do you want to restart?",
+                                                  QMessageBox::Yes | QMessageBox::No);
+                    if (reply == QMessageBox::Yes) {
+                        restartGame();  // перезапуск игры
+                    } else {
+                        QApplication::quit();  // выход из игры
+                    }
+                }
+            }
+
+            // проверка на самопересечение
+            // начинаем сравнивать с 1, чтобы не сравнивать голову саму с собой
+            for (int i = 1; i < snake_.getBody().size(); i++) {
+                if (snake_.getBody()[i] == snake_.getBody().first()) {
+                    timer_->stop();
+
+                    QMessageBox::StandardButton reply;
+                    reply = QMessageBox::question(this, "Game Over", "You hit yourself! Do you want to restart?",
+                                                  QMessageBox::Yes | QMessageBox::No);
+                    if (reply == QMessageBox::Yes) {
+                        restartGame();  // перезапуск игры
+                    } else {
+                        QApplication::quit();  // выход из игры
+                    }
+                }
+            }
+
+            if (!timer_->isActive()) {
+                return;
+            }
+
             update(); // перерисовываем окно (вызывается метод paintEvent)
         }
 };

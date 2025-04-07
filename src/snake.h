@@ -12,6 +12,8 @@ class Snake {
         void move(); // метод движения змейки
         void setDirection(Qt::Key d); // метод смены направления движения
         QList<QPoint> getBody();
+
+        void reset(); // сброс состояния змейки (для перезапуска)
 };
 
 #endif

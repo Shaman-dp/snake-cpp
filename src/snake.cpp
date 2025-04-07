@@ -1,9 +1,9 @@
 #include "snake.h"
 
 Snake::Snake() {
-    snakeBody_.append(QPoint(50, 50));
-    snakeBody_.append(QPoint(60, 50));
     snakeBody_.append(QPoint(70, 50));
+    snakeBody_.append(QPoint(60, 50));
+    snakeBody_.append(QPoint(50, 50));
     direction_ = Qt::Key_Right;
 }
 
@@ -41,4 +41,13 @@ void Snake::setDirection(Qt::Key d) {
 
 QList<QPoint> Snake::getBody(){
     return snakeBody_;
+}
+
+void Snake::reset() {
+    snakeBody_.clear();
+
+    snakeBody_.append(QPoint(70, 50));
+    snakeBody_.append(QPoint(60, 50));
+    snakeBody_.append(QPoint(50, 50));
+    direction_ = Qt::Key_Right;
 }
