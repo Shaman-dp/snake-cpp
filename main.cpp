@@ -2,16 +2,33 @@
 #include <QWidget> // для GameWindow
 #include <QPainter> // для метода paintEvent
 #include <QKeyEvent> // для обработки событий (клава, мышь)
+#include <QTimer> // для таймера
 #include <iostream>
 #include "src/snake.h"
 
 class GameWindow : public QWidget {
     private:
         Snake snake_;
+        QTimer* timer_;
     public:
         GameWindow(QWidget *parent = nullptr) {
             setWindowTitle("Snake");
             setFixedSize(400, 400);
+
+            timer_ = new QTimer(this); // таймер для обновления игры
+            // подключаем сигнал "timeout" к методу updateGame
+            connect(timer_, &QTimer::timeout, this, &GameWindow::updateGame);
+            timer_->start(100); // обновление каждые 100 мс
+
+            // NOTE: Qt — событийно-ориентированная система (Qt работает через систему событий (event loop))
+            // как работает:
+            // - внутри event loop создаётся событие timeout
+            // - сигнал от события ставится в очередь
+            // - когда дойдет очередь - вызывается updateGame
+        }
+
+        ~GameWindow() {
+            delete timer_; // таймер создавали в динамической памяти (через new), поэтому надо удалить вручную
         }
 
         // NOTE: методы Qt автоматически вызываются если:
@@ -41,22 +58,22 @@ class GameWindow : public QWidget {
         // сейчас, при нажатии на стрелки, к змейке добавляется элемент в соответствующем направлении
         void keyPressEvent(QKeyEvent *event) override {
             if (event->key() == Qt::Key_Up) {
-                std::cout << "UP" << std::endl;
-                snake_.appendBodyPoint(Qt::Key_Up);
+                snake_.setDirection(Qt::Key_Up);
             }
             if (event->key() == Qt::Key_Down) {
-                std::cout << "DOWN" << std::endl;
-                snake_.appendBodyPoint(Qt::Key_Down);
+                snake_.setDirection(Qt::Key_Down);
             }
             if (event->key() == Qt::Key_Left) {
-                std::cout << "LEFT" << std::endl;
-                snake_.appendBodyPoint(Qt::Key_Left);
+                snake_.setDirection(Qt::Key_Left);
             }
             if (event->key() == Qt::Key_Right) {
-                std::cout << "RIGHT" << std::endl;
-                snake_.appendBodyPoint(Qt::Key_Right);
+                snake_.setDirection(Qt::Key_Right);
             }
-            update();  // перерисовываем окно (вызывается метод paintEvent)
+        }
+
+        void updateGame() {
+            snake_.move();
+            update(); // перерисовываем окно (вызывается метод paintEvent)
         }
 };
 

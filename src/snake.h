@@ -10,7 +10,7 @@ class Snake {
     public:
         Snake();
         void move(); // метод движения змейки
-        void appendBodyPoint(Qt::Key d); // метод добавления сегментов
+        void setDirection(Qt::Key d); // метод смены направления движения
         QList<QPoint> getBody();
 };
 
