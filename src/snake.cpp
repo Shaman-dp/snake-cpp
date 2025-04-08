@@ -43,7 +43,7 @@ void Snake::setDirection(Qt::Key d) {
     direction_ = d;
 }
 
-QList<QPoint> Snake::getBody(){
+QList<QPoint>& Snake::getBody(){
     return snakeBody_;
 }
 

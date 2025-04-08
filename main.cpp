@@ -5,6 +5,7 @@
 #include <QTimer> // для таймера
 #include <iostream>
 #include <QMessageBox>
+#include <QLabel>
 #include "src/snake.h"
 #include "src/food.h"
 
@@ -17,11 +18,21 @@ class GameWindow : public QWidget {
         int foodSize = 10;
         int wallSize = 10;
 
+        int score_ = 0; // счетчик очков
+        int speed_ = 100; // скорость змейки (чем меньше тем быстрее т.к. это скорость обновления между кадрами)
+
+        QLabel* speedLabel_; // виджет уведомления об увеличении скорости
         QTimer* timer_;
     public:
         GameWindow(QWidget *parent = nullptr) {
             setWindowTitle("Snake");
             setFixedSize(400, 400);
+
+            speedLabel_ = new QLabel("Speed Up!", this);
+            speedLabel_->setStyleSheet("QLabel { color: red; font: bold 20px; background: transparent; }");
+            // static_cast<int> используется для явного преобразования типа
+            speedLabel_->move(static_cast<int>(width() / 2 - speedLabel_->width() / 2), static_cast<int>(height() * 0.05));  // позиционируем по центру сверху
+            speedLabel_->hide();  // по-умолчанию скрыто
 
             // размечаем стены
             walls_.append(QRect(0, 0, width(), wallSize));                       // верхняя
@@ -35,7 +46,7 @@ class GameWindow : public QWidget {
             timer_ = new QTimer(this); // таймер для обновления игры
             // подключаем сигнал "timeout" к методу updateGame
             connect(timer_, &QTimer::timeout, this, &GameWindow::updateGame);
-            timer_->start(100); // обновление каждые 100 мс
+            timer_->start(speed_); // устанавливаем и запускаем таймер
 
             // NOTE: Qt — событийно-ориентированная система (Qt работает через систему событий (event loop))
             // как работает:
@@ -45,6 +56,7 @@ class GameWindow : public QWidget {
         }
 
         ~GameWindow() {
+            delete speedLabel_;
             delete timer_; // таймер создавали в динамической памяти (через new), поэтому надо удалить вручную
         }
 
@@ -59,8 +71,11 @@ class GameWindow : public QWidget {
             snake_.reset();  // сброс состояния змейки
             food_.generate(width(), height(), foodSize, snake_.getBody());
 
+            score_ = 0; // сброс очков
+            speed_ = 100; // сброс скорости
+
             // перезапуск таймера
-            timer_->start(100);
+            timer_->start(speed_);
 
             // перерисовываем окно
             update();
@@ -119,7 +134,7 @@ class GameWindow : public QWidget {
                     timer_->stop(); // останавливаем игровой таймер и змейка больше не двигается
 
                     QMessageBox::StandardButton reply;
-                    reply = QMessageBox::question(this, "Game Over", "You hit a wall! Do you want to restart?",
+                    reply = QMessageBox::question(this, "Game Over", QString("You hit a wall!\nScore: %1\nDo you want to restart?").arg(score_),
                                                   QMessageBox::Yes | QMessageBox::No);
                     if (reply == QMessageBox::Yes) {
                         restartGame();  // перезапуск игры
@@ -136,7 +151,7 @@ class GameWindow : public QWidget {
                     timer_->stop();
 
                     QMessageBox::StandardButton reply;
-                    reply = QMessageBox::question(this, "Game Over", "You hit yourself! Do you want to restart?",
+                    reply = QMessageBox::question(this, "Game Over", QString("You hit yourself!\nScore: %1\nDo you want to restart?").arg(score_),
                                                   QMessageBox::Yes | QMessageBox::No);
                     if (reply == QMessageBox::Yes) {
                         restartGame();  // перезапуск игры
@@ -149,7 +164,18 @@ class GameWindow : public QWidget {
             // проверка, что змейка съела еду
             if (snake_.getBody().first() == food_.getPosition()) {
                 snake_.grow(); // удлиняем змейку
+                score_++;
                 food_.generate(width(), height(), foodSize, snake_.getBody());   // генерируем новую еду
+
+                // каждые 10 очков увеличиваем скорость (ограничиваем скорость до 40 мс)
+                if (score_ % 10 == 0 && speed_ > 40) {
+                    speed_ -= 10;
+                    timer_->start(speed_);
+
+                    // показываем виджет на 1500 мс
+                    speedLabel_->show();
+                    QTimer::singleShot(1500, speedLabel_, &QLabel::hide);
+                }
             }
 
             if (!timer_->isActive()) {

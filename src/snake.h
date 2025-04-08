@@ -13,7 +13,7 @@ class Snake {
         void move(); // метод движения змейки
         void grow(); // увеличение змейки при поедании еды
         void setDirection(Qt::Key d); // метод смены направления движения
-        QList<QPoint> getBody();
+        QList<QPoint>& getBody();
 
         void reset(); // сброс состояния змейки (для перезапуска)
 };
