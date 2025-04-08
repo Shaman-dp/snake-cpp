@@ -6,22 +6,31 @@
 #include <iostream>
 #include <QMessageBox>
 #include "src/snake.h"
+#include "src/food.h"
 
 class GameWindow : public QWidget {
     private:
         Snake snake_;
-        QTimer* timer_;
         QVector<QRect> walls_;
+        Food food_;
+
+        int foodSize = 10;
+        int wallSize = 10;
+
+        QTimer* timer_;
     public:
         GameWindow(QWidget *parent = nullptr) {
             setWindowTitle("Snake");
             setFixedSize(400, 400);
 
             // размечаем стены
-            walls_.append(QRect(0, 0, width(), 10));                 // верхняя
-            walls_.append(QRect(0, height() - 10, width(), 10));     // нижняя
-            walls_.append(QRect(0, 0, 10, height()));                // левая
-            walls_.append(QRect(width() - 10, 0, 10, height()));     // правая
+            walls_.append(QRect(0, 0, width(), wallSize));                       // верхняя
+            walls_.append(QRect(0, height() - wallSize, width(), wallSize));     // нижняя
+            walls_.append(QRect(0, 0, wallSize, height()));                      // левая
+            walls_.append(QRect(width() - wallSize, 0, wallSize, height()));     // правая
+
+            // генерируем еду
+            food_.generate(width(), height(), foodSize, snake_.getBody());
 
             timer_ = new QTimer(this); // таймер для обновления игры
             // подключаем сигнал "timeout" к методу updateGame
@@ -48,6 +57,7 @@ class GameWindow : public QWidget {
         // метод перезапуска игры
         void restartGame() {
             snake_.reset();  // сброс состояния змейки
+            food_.generate(width(), height(), foodSize, snake_.getBody());
 
             // перезапуск таймера
             timer_->start(100);
@@ -67,6 +77,10 @@ class GameWindow : public QWidget {
                 painter.drawRect(wall);
             }
 
+            // рисуем еду
+            painter.setBrush(Qt::yellow);
+            painter.drawRect(food_.getPosition().x(), food_.getPosition().y(), foodSize, foodSize);
+
             painter.setBrush(Qt::green);  // Устанавливаем цвет для тела змейки
 
             // отрисовка всех сегментов тела змейки
@@ -79,8 +93,7 @@ class GameWindow : public QWidget {
             }
         }
 
-        // в будущем реализация данного метода будет изменена
-        // сейчас, при нажатии на стрелки, к змейке добавляется элемент в соответствующем направлении
+        // метод обработки событий от пользователя
         void keyPressEvent(QKeyEvent *event) override {
             if (event->key() == Qt::Key_Up) {
                 snake_.setDirection(Qt::Key_Up);
@@ -131,6 +144,12 @@ class GameWindow : public QWidget {
                         QApplication::quit();  // выход из игры
                     }
                 }
+            }
+
+            // проверка, что змейка съела еду
+            if (snake_.getBody().first() == food_.getPosition()) {
+                snake_.grow(); // удлиняем змейку
+                food_.generate(width(), height(), foodSize, snake_.getBody());   // генерируем новую еду
             }
 
             if (!timer_->isActive()) {

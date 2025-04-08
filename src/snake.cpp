@@ -28,6 +28,10 @@ void Snake::move() {
     snakeBody_.removeLast();   // удаляем последний элемент списка (змейка остается той же длины)
 }
 
+void Snake::grow() {
+    snakeBody_.append(snakeBody_.last());
+}
+
 void Snake::setDirection(Qt::Key d) {
     // Запрещаем движение в противоположную сторону
     if ((direction_ == Qt::Key_Up && d == Qt::Key_Down) ||

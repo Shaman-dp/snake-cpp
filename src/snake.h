@@ -9,7 +9,9 @@ class Snake {
         Qt::Key direction_; // направление движения
     public:
         Snake();
+
         void move(); // метод движения змейки
+        void grow(); // увеличение змейки при поедании еды
         void setDirection(Qt::Key d); // метод смены направления движения
         QList<QPoint> getBody();
 
