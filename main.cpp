@@ -3,7 +3,7 @@
 #include <QPainter> // для метода paintEvent
 #include <QKeyEvent> // для обработки событий (клава, мышь)
 #include <QTimer> // для таймера
-#include <iostream>
+//#include <iostream>
 #include <QMessageBox>
 #include <QLabel>
 #include "src/snake.h"
@@ -18,8 +18,11 @@ class GameWindow : public QWidget {
         int foodSize = 10;
         int wallSize = 10;
 
+        const int speedMax_ = 200;
+        const int speedMin_ = 40;
+
         int score_ = 0; // счетчик очков
-        int speed_ = 100; // скорость змейки (чем меньше тем быстрее т.к. это скорость обновления между кадрами)
+        int speed_ = speedMax_; // скорость змейки (чем меньше тем быстрее т.к. это скорость обновления между кадрами)
 
         QLabel* speedLabel_; // виджет уведомления об увеличении скорости
         QTimer* timer_;
@@ -46,7 +49,7 @@ class GameWindow : public QWidget {
             timer_ = new QTimer(this); // таймер для обновления игры
             // подключаем сигнал "timeout" к методу updateGame
             connect(timer_, &QTimer::timeout, this, &GameWindow::updateGame);
-            timer_->start(speed_); // устанавливаем и запускаем таймер
+            timer_->start(speedMax_); // устанавливаем и запускаем таймер
 
             // NOTE: Qt — событийно-ориентированная система (Qt работает через систему событий (event loop))
             // как работает:
@@ -72,10 +75,10 @@ class GameWindow : public QWidget {
             food_.generate(width(), height(), foodSize, snake_.getBody());
 
             score_ = 0; // сброс очков
-            speed_ = 100; // сброс скорости
+            speed_ = speedMax_; // сброс скорости
 
             // перезапуск таймера
-            timer_->start(speed_);
+            timer_->start(speedMax_);
 
             // перерисовываем окно
             update();
@@ -167,9 +170,9 @@ class GameWindow : public QWidget {
                 score_++;
                 food_.generate(width(), height(), foodSize, snake_.getBody());   // генерируем новую еду
 
-                // каждые 10 очков увеличиваем скорость (ограничиваем скорость до 40 мс)
-                if (score_ % 10 == 0 && speed_ > 40) {
-                    speed_ -= 10;
+                // каждые 10 очков увеличиваем скорость (ограничиваем скорость до speedMin_)
+                if (score_ % 10 == 0 && speed_ > speedMin_) {
+                    speed_ -= 20;
                     timer_->start(speed_);
 
                     // показываем виджет на 1500 мс

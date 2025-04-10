@@ -7,6 +7,7 @@ class Snake {
     private:
         QList<QPoint> snakeBody_; // QPoint - точка на плоскости с координатами x и y
         Qt::Key direction_; // направление движения
+        bool changeDirection_ = true; // флаг для управления сменой направления движения
     public:
         Snake();
 

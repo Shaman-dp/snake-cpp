@@ -26,6 +26,8 @@ void Snake::move() {
 
     snakeBody_.prepend(head);  // добавляет элемент в начало списка
     snakeBody_.removeLast();   // удаляем последний элемент списка (змейка остается той же длины)
+
+    changeDirection_ = true;
 }
 
 void Snake::grow() {
@@ -33,6 +35,11 @@ void Snake::grow() {
 }
 
 void Snake::setDirection(Qt::Key d) {
+    // если предыдущая клавиша не обработана, мы не меняем направление
+    if (!changeDirection_) {
+        return;
+    }
+
     // Запрещаем движение в противоположную сторону
     if ((direction_ == Qt::Key_Up && d == Qt::Key_Down) ||
         (direction_ == Qt::Key_Down && d == Qt::Key_Up) ||
@@ -40,7 +47,9 @@ void Snake::setDirection(Qt::Key d) {
         (direction_ == Qt::Key_Right && d == Qt::Key_Left)) {
         return;
     }
+
     direction_ = d;
+    changeDirection_ = false;
 }
 
 QList<QPoint>& Snake::getBody(){
